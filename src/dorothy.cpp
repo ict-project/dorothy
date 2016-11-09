@@ -854,7 +854,7 @@ int LineInclude::parseLine(const Options & options){
     return(__LINE__);
   }
   if (options.getVerbose()>LOG_NOTICE) notice()<<"Directive 'include' added: "<<tokens<<std::endl;
-  includedFile.reset(new LineFile(tokens.at(0)));
+  includedFile.reset(new LineFile(getThisPath(),tokens.at(0)));
   if (includedFile){
     out=includedFile->parseLine(options);
     if (out) {

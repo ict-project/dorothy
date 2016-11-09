@@ -228,6 +228,7 @@ static int test_options(options_t & options){
     for (const auto & str : options.input) std::cerr<<str<<" ";
     std::cerr<<std::endl;
     std::cerr<<"Output: "<<options.output<<std::endl;
+    std::cerr<<"Working dir: "<<ict::os::getCurrentDir()<<std::endl;
     std::cerr<<"Verbose: "<<options.verbose<<std::endl;
     std::cerr<<"Tokens: "<<std::endl;
     std::cerr<<" $$ = $"<<std::endl;
