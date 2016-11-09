@@ -1323,7 +1323,7 @@ std::string LineNode::getAttr(const namespace_t & namesp_in,const tokens_t & tok
   for (const std::string & c : class_names){
     if (c.size()) {
       const static std::string class_str("class");
-      if (a.count(class_str)) if (!a.at(class_str).size()) a[class_str]+=' ';
+      if (a.count(class_str)) a[class_str]+=' ';
       a[class_str]+=Names::fullName(namesp_in,c);
     }
   }
