@@ -2,13 +2,40 @@
 The *dorothy* is a HTML abstraction markup language for AngularJS apps (but might be also used in other cases).
 
 # Inspiration
-The dorothy language was inspired by 
+The *dorothy* language was inspired by 
 [HAML](http://haml.info/) and 
 [PUG (orginaly JADE)](https://pugjs.org/) languages.
 
 # Compiler
-The code (C++) in this repository provides *dorothy* compiler that 
+A code (C++11) in this repository provides *dorothy* compiler that 
 compiles *dorothy* source into HTML.
+
+# Usage
+```
+Usage:
+ ./dorothy -D input output
+ ./dorothy -d input output
+ ./dorothy options input output
+ ./dorothy -s options input output
+Input: File path or '-' if standard input should be used (UTF8).
+Output: File path or '-' if standard output should be used (UTF8).
+Options:
+ -D, --dep-all - Gets all dependences (list of file paths) for given input.
+ -d, --dep - Gets direct dependences (list of file paths) for given input.
+ -s, --strip - Strip output (no new lines are added and comments are ommited).
+ -v, --verbose - Verbose error stream.
+ -<number> value, --<number>=value - Tokens used inside input (replaces $<number> in input).
+ --max-depth=<value> - Changes max-depth value.
+ -h, --help - Prints this help.
+ --version - Prints version.
+Examples:
+ ./dorothy -D ./inputfile.dorothy - # Shows all dependences for ./inputfile.dorothy file.
+ ./dorothy -d ./inputfile.dorothy - # Shows direct dependences for ./inputfile.dorothy file.
+ ./dorothy --1=One --2="Two" ./inputfile.dorothy ./outputfile.html
+   # Creates HTML for ./inputfile.dorothy file using given tokens and writes it in ./outputfile.html .
+Bug reports: mariusz.ornowski@ict-project.pl
+Version: v1.0
+```
 
 # Basics
 The *dorothy* language uses indentation to nest elements into each other 
