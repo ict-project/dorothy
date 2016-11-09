@@ -1,0 +1,7 @@
+% namespace body
+ % define signature
+  small.signature $1
+ body#body
+  h1.title $1
+  p.-content
+   % clone 1

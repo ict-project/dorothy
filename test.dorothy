@@ -1,0 +1,13 @@
+= <!doctype html>
+% namespace all
+ html
+  / Begin
+  // Header
+  % include ./head "Page title"
+  // Body
+  % include ./body "Page header"
+   span <span>Text content</span>
+    - <span>Text content</span>
+    = <span>Html content</span>
+    % clone signature "User Name"
+  / End

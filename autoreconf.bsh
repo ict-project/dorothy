@@ -1,0 +1,10 @@
+#!/bin/bash
+echo rm -f configure
+rm -f configure
+echo rm -Rf m4
+rm -Rf m4
+echo rm -f *.m4
+rm -f *.m4
+echo autoreconf --warnings=no-portability -i --install $@
+autoreconf --warnings=no-portability -i --install $@
+exit $?
