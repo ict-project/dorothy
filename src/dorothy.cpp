@@ -994,23 +994,7 @@ int LineDefine::parseLine(const Options & options){
   out=loadTokens(options);
   if (out) return(out);
   for (tokens_t::const_iterator it=tokens.cbegin();it!=tokens.end();++it){
-    static std::wregex r(L"[a-zA-Z0-9_$]+",std::regex_constants::collate);
-    std::wsmatch match;
-    std::string stoken(it->second);
-    std::wstring wtoken;
-    ict::global::transferUTF(stoken,wtoken);
-    if (!testName(it->second)){
-      error()<<"Wrong name format in 'define' directive: "<<it->second<<" !"<<std::endl;
-      return(__LINE__);
-    }
-    if (std::regex_search(wtoken,match,r)){
-      for (const std::wstring m : match){
-        std::string sm;
-        std::wstring wm(m);
-        ict::global::transferUTF(wm,sm);
-        defined_names.push_back(sm);
-      }
-    }
+    defined_names.push_back(it->second);
   }
   if (options.getVerbose()>LOG_NOTICE) notice()<<"Directive 'define' added: "<<defined_names<<std::endl;
   line.clear();
