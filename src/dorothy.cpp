@@ -1368,7 +1368,9 @@ int LineNode::loadAll(const Options & options){
     } else if (stage_now==stage_text){//Jeśli to już jest tekst
       if (c) wtext+=c;
     } else if (stage_now==stage_space){//Jeśli to jest przerwa pomiędzy definicją taga a tekstem.
-      switch(c){
+      if ((c==L'~')&&(l!=L' ')&&(l!=L'\t')&&(!no_short)){
+        no_short=true;
+      } else switch(c){
         case L' ':case L'\t':case L'\0':
           break;
         default:
