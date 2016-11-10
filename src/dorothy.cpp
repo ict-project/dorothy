@@ -771,7 +771,7 @@ int LineFile::dependences(const Options & options,std::ostream & output,Files::f
   if (last){
     if (!files.count(fileId)) output<<" "<<ict::os::getRelativePath(Files::id2Path(fileId));
   } else {
-    output<<ict::os::getRelativePath(Files::id2Path(fileId))<<":";
+    output<<ict::os::getRelativePath(Files::id2Path(fileId))<<".dependences"<<":";
     files.insert(fileId);
     out=Line::dependences(options,output,files);
     if (out) return(out);
