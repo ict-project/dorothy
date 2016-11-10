@@ -105,7 +105,7 @@ Every line includes one of the following directives:
    span <span>Text content</span>
     - <span>Text content</span>
     = <span>Html content</span>
-    % clone signature "User Name"
+  % clone body-signature "User Name"
   / End
 ```
 ## Output files
@@ -124,10 +124,11 @@ Every line includes one of the following directives:
       <span>&lt;span&gt;Text content&lt;/span&gt;
        &lt;span&gt;Text content&lt;/span&gt;
        <span>Html content</span>
-        <small class="all-body-signature">User Name</small>
       </span>
      </p>
     </body>
+   <small class="all-signature">User Name</small>
   <!-- End -->
  </html>
+
 ```

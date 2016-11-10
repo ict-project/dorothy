@@ -97,6 +97,11 @@ class Line {
 public:
   typedef std::shared_ptr<Line> ptr_t;
   typedef std::vector<ptr_t> children_list_t;
+  struct local_context_t {
+    const namespace_t * namesp;
+    const tokens_t * tokens;
+    const line_list_t * lines;
+  };
 private:
   depth_t depth;
   Line * parent;
@@ -128,6 +133,7 @@ public:
     const namespace_t & namesp_in,const tokens_t & tokens_in,const line_list_t & lines_in,
     depth_t depth_in,depth_t comments_in
   )=0;
+  virtual local_context_t * getLocalContext(){return(nullptr);}
   int serializeLine(const Options & options,std::ostream & output);
   int serializeChildren(
     const Options & options,std::ostream & output,
@@ -173,8 +179,10 @@ public:
 class LineInclude:public LineTokens {
 private:
   ptr_t includedFile;
+  local_context_t local_context;
 public:
-  LineInclude(const std::string & line_in,Files::file_id_t fileId_in=-1,Files::line_no_t lineNo_in=-1):LineTokens(line_in,fileId_in,lineNo_in){}
+  LineInclude(const std::string & line_in,Files::file_id_t fileId_in=-1,Files::line_no_t lineNo_in=-1)
+    :local_context({nullptr,nullptr,nullptr}),LineTokens(line_in,fileId_in,lineNo_in){}
   int parseLine(const Options & options);
   int dependences(const Options & options,std::ostream & output,Files::file_set_t & files,bool last=false);
   int serialize(
@@ -182,6 +190,7 @@ public:
     const namespace_t & namesp_in,const tokens_t & tokens_in,const line_list_t & lines_in,
     depth_t depth_in,depth_t comments_in
   );
+  local_context_t * getLocalContext(){return(&local_context);}
 };
 //!
 //! Defines namespace ("name") which is used for class names, 
@@ -232,14 +241,18 @@ public:
 //! Example: % clone name token1 "token2" - 
 //!
 class LineClone:public LineTokens {
+private:
+  local_context_t local_context;
 public:
-  LineClone(const std::string & line_in,Files::file_id_t fileId_in=-1,Files::line_no_t lineNo_in=-1):LineTokens(line_in,fileId_in,lineNo_in){}
+  LineClone(const std::string & line_in,Files::file_id_t fileId_in=-1,Files::line_no_t lineNo_in=-1)
+    :local_context({nullptr,nullptr,nullptr}),LineTokens(line_in,fileId_in,lineNo_in){}
   int parseLine(const Options & options);
   int serialize(
     const Options & options,std::ostream & output,
     const namespace_t & namesp_in,const tokens_t & tokens_in,const line_list_t & lines_in,
     depth_t depth_in,depth_t comments_in
   );
+  local_context_t * getLocalContext(){return(&local_context);}
 };
 //!
 //! Inserts text node ("any text") into HTML file (using HTML encoding);
@@ -880,6 +893,9 @@ int LineInclude::serialize(
   line_list_t lines;
   std::size_t c=0;
   bool debug((!options.getStrip())&&(options.getVerbose()>LOG_DEBUG));
+  local_context.namesp=&namesp_in;
+  local_context.tokens=&tokens_in;
+  local_context.lines=&lines_in;
   if (!options.getStrip()) space.append(depth_in?(depth_in-1):0,' ');
   if (debug){
     if (comments_in){
@@ -906,6 +922,9 @@ int LineInclude::serialize(
   if (debug){
     output<<space<<begin<<"Directive 'include' (stop,"<<c<<"): "<<tokens<<end<<std::endl;
   }
+  local_context.namesp=nullptr;
+  local_context.tokens=nullptr;
+  local_context.lines=nullptr;
   return(0);
 }
 int LineInclude::dependences(const Options & options,std::ostream & output,Files::file_set_t & files,bool last){
@@ -1069,6 +1088,9 @@ int LineClone::serialize(
   line_list_t lines;
   static std::regex r("[0-9]+");
   bool debug((!options.getStrip())&&(options.getVerbose()>LOG_DEBUG));
+  local_context.namesp=&namesp_in;
+  local_context.tokens=&tokens_in;
+  local_context.lines=&lines_in;
   if (!options.getStrip()) space.append(depth_in?(depth_in-1):0,' ');
   if (debug){
     if (comments_in){
@@ -1083,22 +1105,37 @@ int LineClone::serialize(
   getChildren(lines);
   if (std::regex_match(tokens.at(0),r)){
     std::size_t no=0;
+    local_context_t contex(local_context);
     try{
       no=std::stoull(tokens.at(0));
     }catch(...){
       no=0;
     }
+    if (lines_in.size()){
+      Line * ptr=lines_in.at(0);
+      if (ptr){
+        local_context_t * c=ptr->getLocalContext();
+        if (c){
+          if (c->namesp) contex.namesp=c->namesp;
+          if (c->tokens) contex.tokens=c->tokens;
+          if (c->lines) contex.lines=c->lines;
+        }
+      }
+    }
     if (no==0){
+      bool first=true;
       for (Line * ptr : lines_in){
-        if (ptr){
-          out=ptr->serialize(options,output,namesp_in,tokens,lines,depth_in,comments_in);
+        if (first){
+          first=false;
+        } else if (ptr){
+          out=ptr->serialize(options,output,*(contex.namesp),*(contex.tokens),*(contex.lines),depth_in,comments_in);
           if (out) return(out);
         }
       }
     } else if (lines_in.size()>no){
       Line * ptr=lines_in.at(no);
       if (ptr){
-        out=ptr->serialize(options,output,namesp_in,tokens,lines,depth_in,comments_in);
+        out=ptr->serialize(options,output,*(contex.namesp),*(contex.tokens),*(contex.lines),depth_in,comments_in);
         if (out) return(out);
       }
     }
@@ -1116,6 +1153,9 @@ int LineClone::serialize(
   if (debug){
     output<<space<<begin<<"Directive 'clone' (stop,"<<c<<"): "<<tokens_in<<end<<std::endl;
   }
+  local_context.namesp=nullptr;
+  local_context.tokens=nullptr;
+  local_context.lines=nullptr;
   return(0);
 }
 //===========================================
