@@ -36,7 +36,7 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #ifndef _MAIN_HEADER
 #define _MAIN_HEADER
 //============================================
-#include "../config.h"
+#include "config.h"
 #include <string>
 #include <map>
 //============================================

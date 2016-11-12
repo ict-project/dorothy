@@ -1,0 +1,192 @@
+#!/bin/bash
+######################################################
+INPUT_OS=$1
+INPUT_JOB=$2
+
+THIS_DIR=`pwd`
+BUILD_DIR="$THIS_DIR/ci/build/$INPUT_OS"
+INSTALL_DIR="$THIS_DIR/ci/install/$INPUT_OS"
+GIT_VERSION=`git --git-dir=$THIS_DIR/.git describe --always --tags`
+
+source $THIS_DIR/package_info.txt
+######################################################
+function do_it(){
+  local JOB=$@
+  echo "$JOB"
+  $JOB
+  RESULT=$?
+  echo "RESULT=$RESULT"
+  return $RESULT
+}
+######################################################
+UBUNTU_TOOLS="autoconf automake make build-essential libtool"
+UBUNTU_LIBS=""
+REDHAT_TOOLS=""
+REDHAT_LIBS=""
+read -r -d '' UBUNTU_PRE <<- EOM
+  #!/bin/sh
+EOM
+read -r -d '' UBUNTU_POST <<- EOM
+  #!/bin/sh
+EOM
+######################################################
+function ubuntu_prepare(){
+  do_it sudo apt-get -y install $UBUNTU_TOOLS || return $?
+  do_it sudo apt-get -y install $UBUNTU_LIBS  || return $?
+  return 0
+}
+
+function redhat_prepare(){
+  return 0
+}
+
+function any_prepare(){
+  case "$INPUT_OS" in
+    "debian") ubuntu_prepare || return $? ;;
+    "ubuntu") ubuntu_prepare || return $? ;;
+    "fedora") redhat_prepare || return $? ;;
+    "centos") redhat_prepare || return $? ;;
+    "redhat") redhat_prepare || return $? ;;
+    *) return -1
+  esac
+  return 0
+}
+
+function any_make_check(){
+  do_it ./autoreconf.bsh || return $?
+  do_it ./configure || return $?
+  do_it make distcheck || return $?
+  do_it make distclean || return $?
+  return 0
+}
+
+function any_configure(){
+  do_it ./autoreconf.bsh || return $? 
+  if [[ -r $THIS_DIR/Makfile ]]; then
+    do_it make distclean || return $?
+  fi
+  do_it mkdir -p $BUILD_DIR || return $?
+  do_it mkdir -p $INSTALL_DIR || return $?
+  do_it cd $BUILD_DIR || return $? 
+  do_it $THIS_DIR/configure || return $? 
+  do_it cd $THIS_DIR || return $? 
+  return 0
+}
+
+function any_make_dist(){
+  do_it cd $BUILD_DIR || return $? 
+  do_it make dist || return $?
+  do_it cd $THIS_DIR || return $? 
+  return 0
+}
+
+function any_make_all(){
+  do_it cd $BUILD_DIR || return $? 
+  do_it make || return $?
+  do_it cd $THIS_DIR || return $? 
+  return 0
+}
+
+function any_make_install(){
+  do_it cd $BUILD_DIR || return $? 
+  do_it make DESTDIR=$INSTALL_DIR install || return $?
+  do_it cd $THIS_DIR || return $? 
+  return 0
+}
+
+function ubuntu_package(){
+  do_it cd $BUILD_DIR || return $? 
+  do_it mkdir -p $INSTALL_DIR/DEBIAN || return $?
+  local DEB_CONF="$INSTALL_DIR/DEBIAN/control"
+  local DEB_PRE="$INSTALL_DIR/DEBIAN/prerm"
+  local DEB_POST="$INSTALL_DIR/DEBIAN/postinst"
+  local DEB_DEPS=""
+  for DEP in $UBUNTU_LIBS ; do
+    if [[ -z "$DEB_DEPS" ]]; then
+      local DEB_DEPS="$DEP"
+    else
+      local DEB_DEPS="$DEB_DEPS, $DEP"
+    fi
+  done
+  echo "Package: $FULL_PACKAGE_NAME" > $DEB_CONF
+  echo "Version: 0:${GIT_VERSION//v}-0" >> $DEB_CONF
+  echo "Section: base" >> $DEB_CONF
+  echo "Priority: optional" >> $DEB_CONF
+  echo "Architecture: all" >> $DEB_CONF
+  echo "Depends: $DEB_DEPS" >> $DEB_CONF
+  echo "Maintainer: $BUG_REPORT_ADDRESS" >> $DEB_CONF
+  echo "Description: nic" >> $DEB_CONF
+  echo "$UBUNTU_PRE" > $DEB_PRE
+  chmod 755 $DEB_PRE
+  echo "$UBUNTU_POST" > $DEB_POST
+  chmod 755 $DEB_POST
+  find $INSTALL_DIR -type d | xargs chmod 755
+  do_it fakeroot dpkg-deb --build $INSTALL_DIR || return $?
+  do_it mv "$INSTALL_DIR.deb" "$THIS_DIR/ci/install/$FULL_PACKAGE_NAME-$GIT_VERSION.deb" || return $?
+  do_it cd $THIS_DIR || return $? 
+  return 0
+}
+
+function redhat_package(){
+  return 0
+}
+
+function any_package(){
+  case "$INPUT_OS" in
+    "debian") ubuntu_package || return $? ;;
+    "ubuntu") ubuntu_package || return $? ;;
+    "fedora") redhat_package || return $? ;;
+    "centos") redhat_package || return $? ;;
+    "redhat") redhat_package || return $? ;;
+    *) return -1
+  esac
+  return 0
+}
+
+function any_make_clean(){
+  do_it cd $BUILD_DIR || return $? 
+  do_it make clean || return $?
+  do_it cd $THIS_DIR || return $? 
+  do_it rm -Rf $BUILD_DIR || return $? 
+  do_it rm -Rf $INSTALL_DIR || return $? 
+  return 0
+}
+######################################################
+function job_check(){
+  any_prepare || return $?
+  any_make_check || return $?
+  return 0
+}
+
+function job_dist(){
+  any_prepare || return $?
+  any_configure || return $?
+  any_make_dist || return $?
+  return 0
+}
+
+function job_build(){
+  any_prepare || return $?
+  any_configure || return $?
+  any_make_all || return $?
+  any_make_install || return $?
+  any_package || return $?
+  return 0
+}
+
+function job_clean(){
+  any_prepare || return $?
+  any_configure || return $?
+  any_make_clean || return $?
+  return 0
+}
+######################################################
+case "$INPUT_JOB" in
+  "check") job_check || exit $? ;;
+  "dist") job_dist || exit $? ;;
+  "build") job_build || exit $? ;;
+  "clean") job_clean || exit $? ;;
+  *) exit -1
+esac
+exit 0
+######################################################

@@ -1,0 +1,45 @@
+before_script:
+  - ls -al
+
+after_script:
+  - ls -al
+
+stages:
+  - make_check
+  - make_dist
+  - make_build
+  - make_clean
+
+ubuntu_make_check:
+  stage: make_check
+  tags: 
+    - ubuntu
+  script: 
+    - ci/ci.bsh ubuntu check
+
+ubuntu_make_dist:
+  stage: make_dist
+  tags: 
+    - ubuntu
+  script: 
+    - ci/ci.bsh ubuntu dist
+  artifacts:
+    paths:
+      - ci/build/*/libict-*.tar.gz
+
+ubuntu_make_build:
+  stage: make_build
+  tags: 
+    - ubuntu
+  script: 
+    - ci/ci.bsh ubuntu build
+  artifacts:
+    paths:
+      - ci/install/
+
+ubuntu_make_clean:
+  stage: make_clean
+  tags: 
+    - ubuntu
+  script: 
+    - ci/ci.bsh ubuntu clean
