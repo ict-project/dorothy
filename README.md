@@ -1,5 +1,5 @@
 # Language
-The *dorothy* is a HTML abstraction markup language for AngularJS apps (but might be also used in other cases).
+The *dorothy* is a HTML abstraction markup language for [AngularJS](https://angularjs.org/) apps (but might be also used in other cases).
 
 # Inspiration
 The *dorothy* language was inspired by 
@@ -9,6 +9,7 @@ The *dorothy* language was inspired by
 # Compiler
 A code (C++11) in this repository provides *dorothy* compiler that 
 compiles *dorothy* source into HTML.
+[![build status](https://dorothy.ict.waw.pl/external/dorothy/badges/master/build.svg)](https://dorothy.ict.waw.pl/external/dorothy/commits/master)
 
 # Usage
 ```
