@@ -1153,8 +1153,19 @@ int LineClone::serialize(
       output<<space<<begin<<"Directive 'clone' (stop,"<<c<<"): "<<(*(contex.tokens))<<end<<std::endl;
     }
   } else {
-    std::string fullName(Names::fullName(namesp_in,tokens_local.at(0)));
-    Line * ptr=Names::name2Line(fullName);
+    Line * ptr=nullptr;
+    namespace_t namesp(namesp_in);
+    do {
+      std::string fullName(Names::fullName(namesp,tokens_local.at(0)));
+      ptr=Names::name2Line(fullName);
+      if (!ptr){
+        if (namesp.size()) {
+          namesp.pop_back();
+        } else {
+          break;
+        }
+      }
+    } while(!ptr);
     if (debug){
       output<<space<<begin<<"Directive 'clone' (start): "<<tokens_local<<end<<std::endl;
     }
@@ -1162,7 +1173,7 @@ int LineClone::serialize(
        out=ptr->serializeChildren(options,output,namesp_in,tokens_local,lines,depth_in,comments_in);
        if (out) return(out);
     } else {
-      error()<<"Name "<<fullName<<" not found!"<<std::endl;
+      error()<<"Name "<<Names::fullName(namesp_in,tokens_local.at(0))<<" not found!"<<std::endl;
       return(__LINE__);
     }
     if (debug){
