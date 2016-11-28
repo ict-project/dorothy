@@ -892,10 +892,14 @@ int LineInclude::serialize(
   std::string end;
   line_list_t lines;
   std::size_t c=0;
+  tokens_t tokens_local;
   bool debug((!options.getStrip())&&(options.getVerbose()>LOG_DEBUG));
   local_context.namesp=&namesp_in;
   local_context.tokens=&tokens_in;
   local_context.lines=&lines_in;
+  for (tokens_t::const_iterator it=tokens.cbegin();it!=tokens.cend();++it){
+    tokens_local[it->first]=replaceTokens(it->second,tokens_in);
+  }
   if (!options.getStrip()) space.append(depth_in?(depth_in-1):0,' ');
   if (debug){
     if (comments_in){
@@ -905,12 +909,12 @@ int LineInclude::serialize(
       begin="<!-- ";
       end=" -->";
     }
-    output<<space<<begin<<"Directive 'include' (start): "<<tokens<<end<<std::endl;
+    output<<space<<begin<<"Directive 'include' (start): "<<tokens_local<<end<<std::endl;
   }
   getChildren(lines);
   if (includedFile){
     c=includedFile->childrenCount();
-    out=includedFile->serializeChildren(options,output,namesp_in,tokens,lines,depth_in,comments_in);
+    out=includedFile->serializeChildren(options,output,namesp_in,tokens_local,lines,depth_in,comments_in);
     if (out) {
       info()<<"File included here."<<std::endl;
       return(out);
@@ -920,7 +924,7 @@ int LineInclude::serialize(
     return(__LINE__);
   }
   if (debug){
-    output<<space<<begin<<"Directive 'include' (stop,"<<c<<"): "<<tokens<<end<<std::endl;
+    output<<space<<begin<<"Directive 'include' (stop,"<<c<<"): "<<tokens_local<<end<<std::endl;
   }
   local_context.namesp=nullptr;
   local_context.tokens=nullptr;
@@ -1086,11 +1090,15 @@ int LineClone::serialize(
   std::string end;
   std::size_t c=childrenCount();
   line_list_t lines;
+  tokens_t tokens_local;
   static std::regex r("[0-9]+");
   bool debug((!options.getStrip())&&(options.getVerbose()>LOG_DEBUG));
   local_context.namesp=&namesp_in;
   local_context.tokens=&tokens_in;
   local_context.lines=&lines_in;
+  for (tokens_t::const_iterator it=tokens.cbegin();it!=tokens.cend();++it){
+    tokens_local[it->first]=replaceTokens(it->second,tokens_in);
+  }
   if (!options.getStrip()) space.append(depth_in?(depth_in-1):0,' ');
   if (debug){
     if (comments_in){
@@ -1100,12 +1108,14 @@ int LineClone::serialize(
       begin="<!-- ";
       end=" -->";
     }
-    output<<space<<begin<<"Directive 'clone' (start): "<<tokens_in<<end<<std::endl;
   }
   getChildren(lines);
   if (std::regex_match(tokens.at(0),r)){
     std::size_t no=0;
     local_context_t contex(local_context);
+    if (debug){
+      output<<space<<begin<<"Directive 'clone' (start): "<<(*(contex.tokens))<<end<<std::endl;
+    }
     try{
       no=std::stoull(tokens.at(0));
     }catch(...){
@@ -1139,19 +1149,25 @@ int LineClone::serialize(
         if (out) return(out);
       }
     }
+    if (debug){
+      output<<space<<begin<<"Directive 'clone' (stop,"<<c<<"): "<<(*(contex.tokens))<<end<<std::endl;
+    }
   } else {
-    std::string fullName(Names::fullName(namesp_in,tokens.at(0)));
+    std::string fullName(Names::fullName(namesp_in,tokens_local.at(0)));
     Line * ptr=Names::name2Line(fullName);
+    if (debug){
+      output<<space<<begin<<"Directive 'clone' (start): "<<tokens_local<<end<<std::endl;
+    }
     if (ptr){
-       out=ptr->serializeChildren(options,output,namesp_in,tokens,lines,depth_in,comments_in);
+       out=ptr->serializeChildren(options,output,namesp_in,tokens_local,lines,depth_in,comments_in);
        if (out) return(out);
     } else {
       error()<<"Name "<<fullName<<" not found!"<<std::endl;
       return(__LINE__);
     }
-  }
-  if (debug){
-    output<<space<<begin<<"Directive 'clone' (stop,"<<c<<"): "<<tokens_in<<end<<std::endl;
+    if (debug){
+      output<<space<<begin<<"Directive 'clone' (stop,"<<c<<"): "<<tokens_local<<end<<std::endl;
+    }
   }
   local_context.namesp=nullptr;
   local_context.tokens=nullptr;
