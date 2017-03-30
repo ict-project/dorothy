@@ -1,3 +1,0 @@
-FULL_PACKAGE_NAME="dorothy"
-VERSION="v1.0"
-BUG_REPORT_ADDRESS="mariusz.ornowski@ict-project.pl"

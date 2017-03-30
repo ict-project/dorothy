@@ -1,0 +1,8 @@
+/home/mjo/Projekty/github/dorothy/source/build/CMakeFiles/list_install_components.dir
+/home/mjo/Projekty/github/dorothy/source/build/CMakeFiles/install.dir
+/home/mjo/Projekty/github/dorothy/source/build/CMakeFiles/rebuild_cache.dir
+/home/mjo/Projekty/github/dorothy/source/build/CMakeFiles/edit_cache.dir
+/home/mjo/Projekty/github/dorothy/source/build/CMakeFiles/dorothy.dir
+/home/mjo/Projekty/github/dorothy/source/build/CMakeFiles/install/local.dir
+/home/mjo/Projekty/github/dorothy/source/build/CMakeFiles/install/strip.dir
+/home/mjo/Projekty/github/dorothy/source/build/CMakeFiles/test.dir
